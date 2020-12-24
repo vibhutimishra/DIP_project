@@ -1,1 +1,1 @@
-# DIP_project
+# Digital Image processing project
