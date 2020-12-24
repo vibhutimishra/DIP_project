@@ -34,10 +34,15 @@ def preprocess(bgr_img):#gray image
     clean = cv2.fastNlMeansDenoising(th_img)
     cv2.imshow('clean image', clean) 
     cv2.waitKey(0) 
-    return clean
+
+
+    histogram = line_segmentation(clean)
+    index = indexing(clean,histogram)
+
+    word_segmentation(clean, index)
     # Skew Detection and Correction
     #Applicable only if image is not horizontal
-    
+
 # ploting histogram  
 def plot_histogram(histogram):
     # this is for plotting purpose
@@ -45,7 +50,7 @@ def plot_histogram(histogram):
     plt.bar(index, histogram)
     plt.xlabel('count', fontsize=5)
     plt.ylabel('row_count', fontsize=5)
-    plt.title('Row wise count of white pixels')
+    plt.title('Image Histogram')
     plt.show()
     
 # segmenting lines
@@ -61,7 +66,39 @@ def line_segmentation(clean):
         histogram.append(count)
 
     plot_histogram(histogram) 
-    
+    print(histogram)
+    return histogram
 
-preprocessed_image=function()
-line_segmentation(preprocessed_image)
+def word_segmentation():
+
+
+
+
+
+    
+def indexing(clean,histogram):
+    size= clean.shape
+    lines = 1
+    temp=0
+    i=0
+    index=[]
+    while(i<size[0]):
+        if(histogram[i]==0):
+            temp=i
+            count=0
+            while(histogram[i]==0):
+                count+=1
+                i+=1
+            if(count>=5):
+                t=[]
+                t.append([temp,temp+count])
+                index.append(t)
+                lines+=1
+        else:
+            i+=1
+    print("lines")
+    print(lines)
+    print(index)
+    return index
+
+function()
