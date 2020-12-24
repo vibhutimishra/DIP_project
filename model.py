@@ -69,13 +69,29 @@ def line_segmentation(clean):
     print(histogram)
     return histogram
 
-def word_segmentation():
+def word_segmentation(clean,index):
+    size= clean.shape
+    image = list(clean)
+    final_lines=[]
+    start=0
+    for i in range(len(index)):
+        temp=[]
+        temp=image[start:index[i][0]]
+        final_lines.append(temp)
+        start= index[i][0]+1
+
+    first_line=final_lines[0]
+    histogram=[]
+    for i in range(size[1]):
+        count=0
+        for j in range(len(first_line)):
+           if(first_line[j][i]!=0):
+               count+=1
+        histogram.append(count)
+
+    plot_histogram(histogram) 
 
 
-
-
-
-    
 def indexing(clean,histogram):
     size= clean.shape
     lines = 1
@@ -91,7 +107,8 @@ def indexing(clean,histogram):
                 i+=1
             if(count>=5):
                 t=[]
-                t.append([temp,temp+count])
+                t.append(temp)
+                t.append(temp+count)
                 index.append(t)
                 lines+=1
         else:
