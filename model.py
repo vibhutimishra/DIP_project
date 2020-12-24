@@ -32,12 +32,11 @@ def preprocess(bgr_img):#gray image
     clean = cv2.fastNlMeansDenoising(th_img)
     cv2.imshow('clean image', clean) 
     cv2.waitKey(0) 
-    rows, cols = th_img.shape
-    bg_test = np.array([th_img[i][i] for i in range(5)])
-    print(bg_test)
-    if bg_test.all() == 0:
-        text_color = 255
-    else:
-        text_color = 0
+
+    # Skew Detection and Correction
+    #Applicable only if image is not horizontal
+
+    
+
 
 function()
