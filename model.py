@@ -2,9 +2,8 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt 
 
-
 def function():
-    image = cv2.imread('C:\\Users\\Vibuthi mishra\\Documents\\projects\\DIP_Project\\demo.jpeg') 
+    image = cv2.imread('./demo.jpeg') 
     # We use cvtColor, to convert to grayscale 
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
     
@@ -26,28 +25,70 @@ def preprocess(bgr_img):#gray image
 
     # thesholding and binarization 
     ret,th_img = cv2.threshold(blur,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU) #converts black to white and inverse
-    print(ret)
+    #print(ret)
     cv2.imshow('th_img', th_img) 
     cv2.waitKey(0)  
 
     # Noise reduction
     clean = cv2.fastNlMeansDenoising(th_img)
+    print(clean)
     cv2.imshow('clean image', clean) 
     cv2.waitKey(0) 
 
-
+    ####Line Segmentation
     histogram = line_segmentation(clean)
-    index = indexing(clean,histogram)
+    index_line = indexing_line(clean,histogram)
+    bound = addLineBoundingBox(clean,index_line)
+    cv2.imshow('Bounding boxes', bound) 
+    cv2.waitKey(0) 
 
-    word_segmentation(clean, index)
-    # Skew Detection and Correction
-    #Applicable only if image is not horizontal
+    ### Cropping Lines
+    size= clean.shape
+    image = list(clean)
+    final_lines=[]
+    start=0
+    for i in range(len(index_line)):
+        temp=[]
+        temp=image[start:index_line[i][0]]
+        final_lines.append(np.uint8(temp))
+        start= index_line[i][0]+1
+
+    ### Word Segmentation
+    histogram = word_segmentation(final_lines[0])
+    index_word = indexing_word(histogram)
+    bound = addWordBoundingBox(final_lines[0],index_word)
+    cv2.imshow('Bounding boxes', bound) 
+    cv2.waitKey(0) 
+
 
 # ploting histogram  
-def plot_histogram(histogram):
+def addLineBoundingBox(image,index):
+    index = np.array(index)
+    index = index.flatten()
+    for i in index:
+        for j in range(len(image[i])):
+            image[i][j] = 255
+    
+    return image
+
+def addWordBoundingBox(image,index):
+    index = np.array(index)
+    index = index.flatten()
+
+    for j in index:
+        for i in range(len(image)):
+            image[i][j] = 255    
+    return image
+
+
+def plot_histogram(histogram,orientation):
     # this is for plotting purpose
     index = np.arange(len(histogram))
-    plt.bar(index, histogram)
+    if orientation == "horizontal":
+        plt.barh(index, histogram)
+    else:
+        plt.bar(index,histogram)
+
     plt.xlabel('count', fontsize=5)
     plt.ylabel('row_count', fontsize=5)
     plt.title('Image Histogram')
@@ -56,7 +97,7 @@ def plot_histogram(histogram):
 # segmenting lines
 def line_segmentation(clean):
     size= clean.shape
-    print(size)
+    #print(size)
     histogram=[]
     for i in range(size[0]):
         count=0
@@ -65,34 +106,27 @@ def line_segmentation(clean):
                 count+=1
         histogram.append(count)
 
-    plot_histogram(histogram) 
-    print(histogram)
+    plot_histogram(histogram,orientation="horizontal") 
     return histogram
 
-def word_segmentation(clean,index):
-    size= clean.shape
-    image = list(clean)
-    final_lines=[]
-    start=0
-    for i in range(len(index)):
-        temp=[]
-        temp=image[start:index[i][0]]
-        final_lines.append(temp)
-        start= index[i][0]+1
-
-    first_line=final_lines[0]
+def word_segmentation(image):
+    
+    cv2.imshow('Line',image)
+    cv2.waitKey(0)
+    
     histogram=[]
-    for i in range(size[1]):
+    for i in range(image.shape[1]):
         count=0
-        for j in range(len(first_line)):
-           if(first_line[j][i]!=0):
+        for j in range(len(image)):
+           if(image[j][i]!=0):
                count+=1
         histogram.append(count)
+    plot_histogram(histogram,orientation="vertical") 
+    return histogram
+    
 
-    plot_histogram(histogram) 
-
-
-def indexing(clean,histogram):
+def indexing_line(clean,histogram):
+    print(histogram)
     size= clean.shape
     lines = 1
     temp=0
@@ -113,9 +147,24 @@ def indexing(clean,histogram):
                 lines+=1
         else:
             i+=1
-    print("lines")
-    print(lines)
-    print(index)
     return index
+
+def indexing_word(histogram):
+    spaces = []
+    i=0
+    while(i<len(histogram)):
+        count = 0
+        if histogram[i] == 0:
+            start = i
+            while histogram[i] == 0:
+                count+=1
+                i+=1
+                if i == len(histogram):
+                    break
+
+            if count >= 5:
+                spaces.append([start,i-1])
+        i+=1
+    return spaces
 
 function()
