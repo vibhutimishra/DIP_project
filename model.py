@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt 
+from skimage.morphology import skeletonize
 
 def function():
     image = cv2.imread('./demo.jpeg') 
@@ -60,6 +61,16 @@ def preprocess(bgr_img):#gray image
     cv2.imshow('Bounding boxes', bound) 
     cv2.waitKey(0) 
 
+    print(final_lines[0])
+    print(index_word)
+    ###Character segmentation
+    final_words = []
+    for i in range(len(index_word)-1):
+        start = index_word[i][1]
+        end = index_word[i+1][0]
+        final_words.append(np.uint8([x[start:end] for x in final_lines[0]]))
+    
+    character_segmentation(final_words[0])
 
 # ploting histogram  
 def addLineBoundingBox(image,index):
@@ -74,11 +85,11 @@ def addLineBoundingBox(image,index):
 def addWordBoundingBox(image,index):
     index = np.array(index)
     index = index.flatten()
-
+    new_image = image.copy()
     for j in index:
         for i in range(len(image)):
-            image[i][j] = 255    
-    return image
+            new_image[i][j] = 255    
+    return new_image
 
 
 def plot_histogram(histogram,orientation):
@@ -124,6 +135,28 @@ def word_segmentation(image):
     plot_histogram(histogram,orientation="vertical") 
     return histogram
     
+def character_segmentation(image):
+    temp = np.uint8(image) / 255
+
+    image = np.uint8(skeletonize(temp)) * 255
+    cv2.imshow("Skeletonized",image)
+    cv2.waitKey(0)
+
+    indexToWhiten = []
+    for j in range(image.shape[1]):
+        count=0
+        for i in range(image.shape[0]):
+            if image[i][j] == 255:
+                count+=1
+        if count == 1:
+            indexToWhiten.append(j)
+    
+    for j in indexToWhiten:
+        for i in range(image.shape[0]):
+            temp[i][j] = 255
+    
+    cv2.imshow("Character Segmentation",temp)
+    cv2.waitKey(0)
 
 def indexing_line(clean,histogram):
     print(histogram)
